@@ -1,0 +1,22 @@
+Issue,Type,Line(s),Description,Fix Approach
+Mutable default argument,Bug,15,member_log=[] shared across calls,Changed default to None and initialized inside the function
+Missing function docstrings,Style,"15, 23, 30, 40, 46, 50, 54, 61, 69",Functions lacked documentation,Added docstrings
+Invalid function names,Style,"15, 23, 30, 40",Function names used camelCase,Renamed functions using snake_case
+Lines too long,Style,"10, 11, 18",Lines exceeded 79 characters,Split statements across multiple lines
+Unnecessary string formatting,Style,19,Used % formatting,Replaced with an f-string
+Bare exception handling,Bug,26,Exceptions were silently ignored,"Replaced with members.pop(m_id, None)"
+Incorrect None comparison,Style,32,Used == None,Used is None
+Unnecessary if/else,Style,34,Redundant conditional returns,Simplified the membership status check
+Unused variable,Code quality,31,locker_deposit was unused,Removed the variable
+Unsafe eval(),Security,42,Could execute arbitrary code,Replaced with a restricted AST-based arithmetic evaluator
+Unused base_fee warning,Code quality,41,Pylint flagged the variable as unused,Used it explicitly in the restricted evaluator
+Weak MD5 hashing,Security,47,MD5 is unsuitable for secure hashing,Replaced with SHA-256
+Insecure random generator,Security,51,random.randint() is not cryptographically secure,Replaced with secrets.randbelow()
+Shell command execution,Security,58,os.system() could allow command injection,Replaced with print()
+Hardcoded API secret,Security,70,Secret was stored in source code,Read it from an environment variable
+Missing file encoding,Maintainability,55,File encoding was unspecified,"Added encoding=""utf-8"""
+Unmanaged file resource,Maintainability,55–57,File was opened and closed manually,Used a with statement
+Shadowed variable name,Code quality,61,Parameter members redefined a global name,Renamed parameter to member_data
+Unused loop variable,Code quality,63,Loop variable m was unused,Iterated over dictionary values
+Unused import,Code quality,6,math was imported but unused,Removed the import
+Missing final newline,Style,82,File lacked a final newline,Added a newline at the end
