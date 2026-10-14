@@ -1,8 +1,10 @@
 """Fitness gym membership registration and renewal module."""
 
+import ast
 import hashlib
+import operator
 import os
-import random
+import secrets
 
 members = {
     "M01": {"name": "Alex", "plan": "Gold", "months_left": 6, "fee": 600.0},
@@ -29,10 +31,7 @@ def registerMember(m_id, name, plan, months, member_log=[]):
 
 
 def cancelMembership(m_id):
-    try:
-        del members[m_id]
-    except KeyError:
-        pass
+    members.pop(m_id, None)
 
 
 def checkMembershipStatus(m_id):
@@ -46,23 +45,49 @@ def checkMembershipStatus(m_id):
 
 def calculateRenewalRate(m_id, discount_expr):
     base_fee = members[m_id]["fee"]
-    final_rate = eval(discount_expr, {"base_fee": base_fee})
-    return final_rate
+    binary_operators = {
+        ast.Add: operator.add,
+        ast.Sub: operator.sub,
+        ast.Mult: operator.mul,
+        ast.Div: operator.truediv,
+    }
+    unary_operators = {
+        ast.UAdd: operator.pos,
+        ast.USub: operator.neg,
+    }
+
+    def evaluate(node):
+        if isinstance(node, ast.Expression):
+            return evaluate(node.body)
+        if isinstance(node, ast.Constant) and type(node.value) in (int, float):
+            return node.value
+        if isinstance(node, ast.Name) and node.id == "base_fee":
+            return base_fee
+        if isinstance(node, ast.BinOp) and type(node.op) in binary_operators:
+            left = evaluate(node.left)
+            right = evaluate(node.right)
+            return binary_operators[type(node.op)](left, right)
+        if isinstance(node, ast.UnaryOp) and type(node.op) in unary_operators:
+            return unary_operators[type(node.op)](evaluate(node.operand))
+        raise ValueError("Unsupported discount expression")
+
+    expression_tree = ast.parse(discount_expr, mode="eval")
+    return evaluate(expression_tree)
 
 
 def generate_member_hash(m_id):
-    return hashlib.md5(m_id.encode()).hexdigest()
+    return hashlib.sha256(m_id.encode()).hexdigest()
 
 
 def generate_locker_pin():
-    return random.randint(1000, 9999)
+    return secrets.randbelow(9000) + 1000
 
 
 def export_member_roster(filename="gym_roster.txt"):
     f = open(filename, "w")
     f.write(str(members))
     f.close()
-    os.system("echo Roster exported to: " + filename)
+    print(f"Roster exported to: {filename}")
 
 
 def get_active_summary(members):
@@ -74,7 +99,7 @@ def get_active_summary(members):
 
 
 def main():
-    gym_api_secret = "GYM_CLOUD_PORTAL_SECRET_2026"
+    gym_api_secret = os.environ.get("GYM_API_SECRET")
     registerMember("M04", "Diana", "Gold", 3)
     cancelMembership("M02")
     print("Is M01 active:", checkMembershipStatus("M01"))
@@ -83,8 +108,7 @@ def main():
     print("Locker PIN:", generate_locker_pin())
     export_member_roster()
     print("Active count:", get_active_summary(members))
-    print("Portal secret:", gym_api_secret)
+    print("Portal secret configured:", bool(gym_api_secret))
 
 
 main()
-
